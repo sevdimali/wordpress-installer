@@ -1,10 +1,8 @@
 #!/bin/bash
-set -xv
 
 
 notify-send "Welcome to Wordpress Installation!"
-
-#FGathering Informations
+#Gathering Informations
 setup_inf=$(zenity \
 	--forms --title="Wordpress Installation" \
 	--text="Kurulum işlemine başlamak için aşağıdaki bilgileri girin." \
@@ -19,6 +17,7 @@ setup_inf=$(zenity \
 if [ $? == "1" ]; then
 	exit;
 fi
+
 
 #Database Informations
 DBNAME=$(echo $setup_inf | cut -d':' -f1);
@@ -92,6 +91,8 @@ fi
 #Unzipping Wordpress Zip
 unzip latest.zip;
 rm latest.zip
+
+
 #Changing Directory into Wordpress
 cd wordpress
 #Configuring wp-config file
@@ -113,21 +114,16 @@ if [ "ls | *.zip" ]; then
 	rm *.zip;
 fi
 
+
 #Uploading Files and Folders to Server
 notify-send "Files are uploading to server!"
-SOURCEFOLDER="../../wordpress"
+SOURCEFOLDER="../../../wordpress"
 TARGETFOLDER="/"
-lftp -f "
-open $FTPHOST
-user $FTPUSER $FTPPASS
-lcd $SOURCEFOLDER
-mirror --reverse --verbose $SOURCEFOLDER $TARGETFOLDER
-bye
-";
+lftp -u $FTPUSER,$FTPPASS $FTPHOST -e "mirror --verbose --only-newer --reverse $SOURCEFOLDER $TARGETFOLDER/; bye";
 
 
 #Cleaning to Unnecessary Files
-rm -rf ../../../wordpress
+rm -rf ../../wordpress
 notify-send "Wordpress installation finished!"
 zenity --text="Do you want to open admin panel?" --question;
 if [ "$?" == "0" ]; then sensible-browser http://www.$DOMAIN.com/wp-admin & ; fi
