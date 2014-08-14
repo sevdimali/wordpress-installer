@@ -1,8 +1,10 @@
 #!/bin/bash
 set -xv
+
+
 notify-send "Welcome to Wordpress Installation!"
 
-#FORM İLE BİLGİLER ALINIYOR
+#FGathering Informations
 setup_inf=$(zenity \
 	--forms --title="Wordpress Installation" \
 	--text="Kurulum işlemine başlamak için aşağıdaki bilgileri girin." \
@@ -13,23 +15,23 @@ setup_inf=$(zenity \
 	--add-entry="Ftp Server" \
 	--add-entry="Ftp Username" \
 	--add-entry="Ftp User Password")
-#Check Cancel
-if [ $setup_inf = 1 ]; then
+#If Cancel
+if [ $? == "1" ]; then
 	exit;
 fi
 
-#VERİTABANI BİLGİLERİ
+#Database Informations
 DBNAME=$(echo $setup_inf | cut -d':' -f1);
 DBUSER=$(echo $setup_inf | cut -d':' -f2);
 DBPASS=$(echo $setup_inf | cut -d':' -f3);
-#FTP BİLGİLERİ
+#FTP Informations
 FTPHOST=$(echo $setup_inf | cut -d':' -f4);
 FTPUSER=$(echo $setup_inf | cut -d':' -f5);         
 FTPPASS=$(echo $setup_inf | cut -d':' -f6);
 DOMAIN=$(echo $setup_inf | cut -d':' -f5 | cut -d'@' -f1); 
 
 
-#YÜKLENECEK EKLENTİLERİN SEÇİLMESİ
+#Choosing Plugins
 wp_eklentileri=$(zenity  \
 	--width=1100 --height=400 --list --text "Choose the plugins for adding to wordpress!" \
 	--checklist --column "Choose" --column "Plugins" --column "Description" --separator=":" \
@@ -71,30 +73,35 @@ for (( i = 1; i < 12; i++ )); do
 	elif [ "${wp_eklentileri[$i]}" == "Category and Page Icons" ]; then
 		eklenti[$e]="category-page-icons"; e=$((e+1));
 	fi
+
+	if [ "${wp_eklentileri[$i-1]}" == "${wp_eklentileri[$i]}" ]; then
+        break
+    fi
 done
-#Check Cancel
-if [ $wp_eklentileri = 1 ]; then
+#If Cancel
+if [ $? == "1" ]; then
 	exit;
 fi
 
 
 notify-send "Downloading files!"
-#Dosya yoksa indir
+#Downloading Latest Wordpress Files
 if [ ! -f ./latest.zip ]; then
 wget https://wordpress.org/latest.zip;
 fi
-#Unzip the file
+#Unzipping Wordpress Zip
 unzip latest.zip;
-#Wordpress klasörüne geçiliyor
+rm latest.zip
+#Changing Directory into Wordpress
 cd wordpress
-#Veritabanı bilgilieri dosyaya ekleniyor
+#Configuring wp-config file
 sed "s/database_name_here/$DBNAME/g" wp-config-sample.php > wp-config-sample-1.php;
 sed "s/username_here/$DBUSER/g" wp-config-sample-1.php > wp-config-sample-2.php;
 sed "s/password_here/$DBPASS/g" wp-config-sample-2.php > wp-config.php;
 rm wp-config-sample-1.php wp-config-sample-2.php
 
 
-#Eklentiler klasöre ekleniyor
+#Downloading Plugins
 cd wp-content/plugins &&
 for (( i = 1; i < $e; i++ )); do
 	echo "i="$i;
@@ -106,7 +113,7 @@ if [ "ls | *.zip" ]; then
 	rm *.zip;
 fi
 
-#Bulunduğum dizinde ne var ne yoksa yükle
+#Uploading Files and Folders to Server
 notify-send "Files are uploading to server!"
 SOURCEFOLDER="../../wordpress"
 TARGETFOLDER="/"
@@ -119,8 +126,8 @@ bye
 ";
 
 
-#Gereksiz dosya klasörler siliniyor
-#rm -rf ../../../wordpress
+#Cleaning to Unnecessary Files
+rm -rf ../../../wordpress
 notify-send "Wordpress installation finished!"
 zenity --text="Do you want to open admin panel?" --question;
 if [ "$?" == "0" ]; then sensible-browser http://www.$DOMAIN.com/wp-admin & ; fi
