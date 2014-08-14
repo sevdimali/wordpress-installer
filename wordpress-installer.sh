@@ -1,44 +1,35 @@
 #!/bin/bash
 #set -xv
 
-notify-send "Wordpress Kurulumuna Hoşgeldiniz!"
-#İŞLEMLER
-islemler=$(zenity  --width=300 --height=300 --list --text "Yapmak istediğiniz işlemleri seçiniz!" --checklist --column "Seç" --column "İşlemler" --separator=":" \
-	FALSE "Domain Satın Alma" \
-	FALSE "Domain Ekleme" \
-	FALSE "Veritabanı İşlemleri" \
-	FALSE "FTP Accountları" \
-	FALSE "Email Hesapları")
+#Sudo girişi yapılıyor
+#if [[ ! $(id -u) -eq 0 ]]; then
+#	while [ 1 ]; do
+#		s=$(zenity --password | sudo -S echo "HOŞGELDİNİZ!");
+#		if [ $? == "0" ]; then
+#			break;
+#		fi
+#	done
+#fi 
 
-for (( i = 1; i < 6; i++ )); do
-	islem[$i]=$(echo $islemler | cut -d':' -f$i);
-	if [ "${islem[$i]}" == "Domain Satın Alma" ]; then
-			google-chrome "http://www.isimtescil.net/domain/domain-kayit.aspx" > /dev/null;
-	elif [ "${islem[$i]}" == "Domain Ekleme" ]; then
-			google-chrome "https://tr1.hostgator.com.tr:2083/cpsess8165069196/frontend/x3/addon/index.html" > /dev/null;
-	elif [ "${islem[$i]}" == "Veritabanı İşlemleri" ]; then
-			google-chrome "https://tr1.hostgator.com.tr:2083/cpsess8165069196/frontend/x3/sql/index.html" > /dev/null;
-	elif [ "${islem[$i]}" == "FTP Accountları" ]; then
-			google-chrome "https://tr1.hostgator.com.tr:2083/cpsess8165069196/frontend/x3/ftp/accounts.html" > /dev/null ;
-	elif [ "${islem[$i]}" == "Email Hesapları" ]; then
-			google-chrome "https://tr1.hostgator.com.tr:2083/cpsess8165069196/frontend/x3/mail/pops.html" > /dev/null; 
-	fi
-done
-zenity --text="Kuruluma devam etmek istiyor musunuz?" --question;
-if [ "$?" == "1" ]; then exit; fi
 
+#Kurulu değil ise LFTP kur
+if [ ! "command -v lftp" ]; then
+	$sistem "sudo apt-get -y install lftp";
+fi
+
+notify-send "Welcome to Wordpress Installation!"
 
 #FORM İLE BİLGİLER ALINIYOR
 setup_inf=$(zenity \
-	--forms --title="Wordpress Kurulumu" \
+	--forms --title="Wordpress Installation" \
 	--text="Kurulum işlemine başlamak için aşağıdaki bilgileri girin." \
 	--separator=":" \
-	--add-entry="Veritabanı Adı" \
-	--add-entry="Veritabanı Kullanıcı Adı" \
-	--add-entry="Veritabanı Kullanıcı Şifresi" \
-	--add-entry="Ftp Serveri" \
-	--add-entry="Ftp Kullanıcı Adı" \
-	--add-entry="Ftp Kullanıcı Şifresi ")
+	--add-entry="DB Name" \
+	--add-entry="DB Username" \
+	--add-entry="DB User Password" \
+	--add-entry="Ftp Server" \
+	--add-entry="Ftp Username" \
+	--add-entry="Ftp User Password")
 #VERİTABANI BİLGİLERİ
 DBNAME=$(echo $setup_inf | cut -d':' -f1);
 DBUSER=$(echo $setup_inf | cut -d':' -f2);
@@ -110,25 +101,21 @@ sed "s/kullaniciadi/$DBUSER/g" wp-config-sample-1.php > wp-config-sample-2.php;
 sed "s/parola/$DBPASS/g" wp-config-sample-2.php > wp-config.php;
 rm wp-config-sample-1.php wp-config-sample-2.php
 
-#Gereksiz temalar siliniyor
-cd wp-content/themes &&
-rm -rf twentyten;
-rm -rf twentyeleven;
-rm -rf twentytwelve;
 
 #Eklentiler klasöre ekleniyor
-cd ../plugins &&
+cd wp-content/plugins &&
 for (( i = 1; i < $e; i++ )); do
 	wget http://downloads.wordpress.org/plugin/${eklenti[$i]}.zip
 done
-unzip "*.zip";
-rm *.zip;
-rm hello.php
+if [ "ls | *.zip" ]; then
+	unzip *.zip;
+	rm *.zip;
+fi
 
 
 #Bulunduğum dizinde ne var ne yoksa yükle
 notify-send "Ftp'ye yükleme işlemi başladı!"
-SOURCEFOLDER="/home/$USER/wordpress"
+SOURCEFOLDER="../wordpress"
 TARGETFOLDER="/"
 lftp -f "
 open $FTPHOST
@@ -140,8 +127,7 @@ bye
 
 
 #Gereksiz dosya klasörler siliniyor
-cd /home/$USER &&
-rm -rf wordpres*
+rm -rf ../../../wordpres*
 notify-send "Sitenin kurulumu tamamlandı!"
 zenity --text="Admin Paneli Açılsın mı?" --question;
 if [ "$?" == "0" ]; then google-chrome http://www.$DOMAIN.com/wp-admin; fi
