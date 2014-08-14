@@ -1,4 +1,32 @@
 #!/bin/bash
+#Checking Requirements
+command -v zenity;
+if [ $? == "1" ]; then
+	read -p "You need to install zenity. Do you want to install? " -n 1 -r
+	echo    # (optional) move to a new line
+	if [[ $REPLY =~ ^[Yy]$ ]]
+	then
+		sudo apt-get install zenity;
+	fi
+fi
+command -v lftp;
+if [ $? == "1" ]; then
+	read -p "You need to install lftp. Do you want to install? " -n 1 -r
+	echo    # (optional) move to a new line
+	if [[ $REPLY =~ ^[Yy]$ ]]
+	then
+		sudo apt-get install lftp;
+	fi
+fi
+command -v notify-send;
+if [ $? == "1" ]; then
+	read -p "You need to install libnotify-bin. Do you want to install? " -n 1 -r
+	echo    # (optional) move to a new line
+	if [[ $REPLY =~ ^[Yy]$ ]]
+	then
+		sudo apt-get install libnotify-bin;
+	fi
+fi
 
 
 notify-send "Welcome to Wordpress Installation!"
