@@ -4,12 +4,12 @@ Wordpress-installer
 This is a bash script for installing wordpress to your server<br />
 You can simply use this script and installing wordpress<br />
 
-Setup & Installation
+Requirements
 -----------------
-<ul>
-<li>Zenity</li>
-<li>Lftp</li>
-</ul>
+Before using the script you need to have this programs.
+1. Zenity
+2. Lftp
+
 
 Features
 -----------------
@@ -24,10 +24,12 @@ Usage
 -----------------
 It's so simple.<br />
 Just start script and it will do all work for you.<br />
-```
+```bash
+cd wordpress-installer
 chmod +x ./wordpress-installer.sh
+./wordpress-installer.sh
 ```
 
-<h3>And finally your wordpress site is ready.</h3>
+#####And finally your wordpress site is ready.
 
 
